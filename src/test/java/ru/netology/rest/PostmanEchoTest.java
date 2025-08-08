@@ -1,23 +1,38 @@
 package ru.netology.rest;
 
 import org.junit.jupiter.api.Test;
-
+import static org.hamcrest.Matchers.equalTo;
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
 public class PostmanEchoTest {
 
     @Test
-    void shouldValidateSchemaFromPostmanEcho() {
+    void shouldReturnPostedPlainText() {
+        // Given - When - Then
+        // Предусловия
         given()
                 .baseUri("https://postman-echo.com")
-                .basePath("/get")
-                .queryParam("foo1", "bar1")
-                .queryParam("foo2", "bar2")
+                .body("some data") // отправляемые данные (заголовки и query можно выставлять аналогично)
+                // Выполняемые действия
                 .when()
-                .get()
+                .post("/post")
+                // Проверки
                 .then()
                 .statusCode(200)
-                .body(matchesJsonSchemaInClasspath("postman-echo-schema.json"));
+                // JSONPath выражение к верхнеуровневому полю 'data'
+                .body("data", equalTo("some data"));
+    }
+    @Test
+    void shouldReturnPostedUtf8Text() {
+        given()
+                .baseUri("https://postman-echo.com")
+                .contentType("text/plain; charset=UTF-8")
+                .body("Ласточка") // проверяем кириллицу
+                .when()
+                .post("/post")
+                .then()
+                .statusCode(200)
+                .body("data", equalTo("Ласточка"));
     }
 }
